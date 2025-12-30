@@ -35,19 +35,23 @@ export function DetectPage({ onNavigate }) {
         // 이미지를 base64로 인코딩
         const base64Image = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
+          reader.onloadend = () => {
+            // data:image/xxx;base64, 접두사 제거
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+          };
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
         
         // 백엔드 API 연결 (base64 JSON 전송)
-        const response = await fetch(`${apiUrl}/detect`, {
+        const response = await fetch(`${apiUrl}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            image: base64Image,
+            image_base64: base64Image,
           }),
         });
         
@@ -56,14 +60,14 @@ export function DetectPage({ onNavigate }) {
         }
         
         const data = await response.json();
-        const creatureName = data.creature_name;
+        const creatureName = data.name;
         const creature = getCreatureByName(creatureName);
         
         if (creature) {
           setResult({
             isHarmful: true,
             species: creature.name,
-            confidence: data.confidence || 94.5,
+            confidence: Math.round((data.confidence || 0)),
             description: creature.description,
           });
           setSelectedSpecies(creature);
@@ -72,7 +76,7 @@ export function DetectPage({ onNavigate }) {
           setResult({
             isHarmful: false,
             species: creatureName || '알 수 없는 생물',
-            confidence: data.confidence || 0,
+            confidence: Math.round((data.confidence || 0)),
             description: '이 생물은 해양 유해생물이 아닙니다. 안심하세요!',
           });
           setSelectedSpecies(null);
