@@ -53,6 +53,11 @@ export function RecipeDetailPage({ onNavigate, recipeId, user }) {
       const data = await toggleLike(recipeId);
       setIsLiked(data.isLiked);
       
+      // Dispatch custom event to sync with RecipeCard
+      window.dispatchEvent(new CustomEvent('likeChanged', {
+        detail: { recipeId, isLiked: data.isLiked }
+      }));
+      
       // Update local like count
       if (recipe) {
         setRecipe({

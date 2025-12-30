@@ -26,6 +26,7 @@ export default function App() {
   const [recipes, setRecipes] = useState([]);
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
   const [selectedSpecies, setSelectedSpecies] = useState(undefined);
+  const [mypageKey, setMypageKey] = useState(0);
 
   const loadRecipes = async () => {
     try {
@@ -60,10 +61,14 @@ export default function App() {
       setSelectedSpecies(undefined);
     }
     setCurrentPage(page);
+    
+    // Dispatch event to refresh like status when navigating
+    window.dispatchEvent(new CustomEvent('pageNavigate', { detail: { page } }));
   };
 
-  const handleRecipeCreated = () => {
-    loadRecipes();
+  const handleRecipeCreated = async () => {
+    await loadRecipes();
+    setMypageKey(prev => prev + 1);
     setCurrentPage('mypage');
   };
 
@@ -143,6 +148,7 @@ export default function App() {
       )}
       {currentPage === 'mypage' && (
         <MyPage
+          key={mypageKey}
           onNavigate={handleNavigate}
           onDeleteRecipe={handleRecipeDeleted}
           user={user}

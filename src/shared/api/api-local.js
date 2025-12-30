@@ -17,6 +17,7 @@ export const signUp = async (email, password, name) => {
   const user = {
     id: crypto.randomUUID(),
     email,
+    password, // 비밀번호 저장
     name,
   };
   
@@ -29,7 +30,7 @@ export const signUp = async (email, password, name) => {
 export const signIn = async (email, password) => {
   const user = storage.findUserByEmail(email);
   
-  if (!user) {
+  if (!user || user.password !== password) {
     throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
   }
   
@@ -70,6 +71,7 @@ export const getRecipeById = async (id) => {
 
 export const createRecipe = async (recipeData) => {
   const user = storage.getCurrentUser();
+  console.log('createRecipe - current user:', user);
   
   if (!user) {
     throw new Error('로그인이 필요합니다.');
@@ -88,7 +90,9 @@ export const createRecipe = async (recipeData) => {
     updatedAt: new Date().toISOString(),
   };
   
+  console.log('createRecipe - saving recipe:', recipe);
   storage.saveRecipe(recipe);
+  console.log('createRecipe - all recipes after save:', storage.getAllRecipes());
   
   return { recipe };
 };
@@ -147,12 +151,17 @@ export const deleteRecipe = async (id) => {
 
 export const getMyRecipes = async () => {
   const user = storage.getCurrentUser();
+  console.log('getMyRecipes - current user:', user);
   
   if (!user) {
     throw new Error('로그인이 필요합니다.');
   }
   
+  const allRecipes = storage.getAllRecipes();
+  console.log('getMyRecipes - all recipes:', allRecipes);
+  
   const recipes = storage.getUserRecipes(user.id);
+  console.log('getMyRecipes - user recipes:', recipes);
   
   return { recipes };
 };

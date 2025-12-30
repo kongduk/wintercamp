@@ -8,11 +8,8 @@ export function MyPage({ onNavigate, onDeleteRecipe, user }) {
   const [myRecipes, setMyRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadMyRecipes();
-  }, [user]);
-
   const loadMyRecipes = async () => {
+    setLoading(true);
     try {
       const data = await getMyRecipes();
       const recipesWithImages = data.recipes.map((r) => ({
@@ -29,6 +26,11 @@ export function MyPage({ onNavigate, onDeleteRecipe, user }) {
       setLoading(false);
     }
   };
+
+  // Load recipes on mount (every time page is shown)
+  useEffect(() => {
+    loadMyRecipes();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!confirm('정말 이 레시피를 삭제하시겠습니까?')) return;
@@ -126,8 +128,18 @@ export function MyPage({ onNavigate, onDeleteRecipe, user }) {
                   className="flex gap-4 p-4 cursor-pointer active:bg-gray-50"
                   onClick={() => onNavigate('detail', recipe.id)}
                 >
-                  <div className="w-24 h-24 bg-gradient-to-br from-[#EA512E] to-[#FF7A59] rounded-xl flex items-center justify-center flex-shrink-0">
-                    <ChefHat className="w-12 h-12 text-white" />
+                  <div className="w-24 h-24 rounded-xl flex-shrink-0 overflow-hidden bg-gray-100">
+                    {recipe.image ? (
+                      <img 
+                        src={recipe.image} 
+                        alt={recipe.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#EA512E] to-[#FF7A59] flex items-center justify-center">
+                        <ChefHat className="w-12 h-12 text-white" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="mb-2 line-clamp-2">{recipe.title}</h4>
