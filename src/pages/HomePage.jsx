@@ -10,6 +10,7 @@ export function HomePage({ onNavigate, recipes, user }) {
   const [selectedSpecies, setSelectedSpecies] = useState(null);
   const [featuredSpecies, setFeaturedSpecies] = useState([]);
   const [topRecipes, setTopRecipes] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(Date.now());
   
   // Load random 3 creatures for featured section
   useEffect(() => {
@@ -17,8 +18,10 @@ export function HomePage({ onNavigate, recipes, user }) {
     setFeaturedSpecies(randomCreatures);
   }, []);
 
-  // Load top recipes from database
+  // Load top recipes from database and refresh key on mount
   useEffect(() => {
+    setRefreshKey(Date.now());
+    
     const loadTopRecipes = async () => {
       try {
         const { getRecipes } = await import('../shared/api/api-local.js');
@@ -91,7 +94,7 @@ export function HomePage({ onNavigate, recipes, user }) {
           <div className="grid grid-cols-2 gap-4">
             {topRecipes.slice(0, 3).map((recipe) => (
               <RecipeCard
-                key={recipe.id}
+                key={`${recipe.id}-${refreshKey}`}
                 recipe={recipe}
                 onClick={() => onNavigate('detail', recipe.id)}
               />

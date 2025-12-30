@@ -10,9 +10,15 @@ export function RecipesPage({ onNavigate, recipes: initialRecipes, initialSpecie
   const [searchQuery, setSearchQuery] = useState('');
   const [recipes, setRecipes] = useState(initialRecipes);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(Date.now());
   
   const categories = ['전체', '아무르불가사리', '별불가사리', '고둥', '보라성게', '말똥성게', '군소', '소라', '감태', '모자반'];
   const cuisines = ['전체', '한식', '양식', '중식', '일식'];
+
+  // Refresh key on mount to force RecipeCard remount
+  useEffect(() => {
+    setRefreshKey(Date.now());
+  }, []);
 
   // Set initial category from props
   useEffect(() => {
@@ -132,7 +138,7 @@ export function RecipesPage({ onNavigate, recipes: initialRecipes, initialSpecie
           <div className="grid grid-cols-2 gap-4 pb-6">
             {filteredRecipes.map((recipe) => (
               <RecipeCard
-                key={recipe.id}
+                key={`${recipe.id}-${refreshKey}`}
                 recipe={recipe}
                 onClick={() => onNavigate('detail', recipe.id)}
               />

@@ -27,6 +27,7 @@ export default function App() {
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
   const [selectedSpecies, setSelectedSpecies] = useState(undefined);
   const [mypageKey, setMypageKey] = useState(0);
+  const [pageKey, setPageKey] = useState(0);
 
   const loadRecipes = async () => {
     try {
@@ -60,6 +61,12 @@ export default function App() {
     } else {
       setSelectedSpecies(undefined);
     }
+    
+    // Increment pageKey to force remount of pages with RecipeCard
+    if (page === 'home' || page === 'recipes') {
+      setPageKey(prev => prev + 1);
+    }
+    
     setCurrentPage(page);
     
     // Dispatch event to refresh like status when navigating
@@ -126,6 +133,7 @@ export default function App() {
       
       {currentPage === 'home' && (
         <HomePage 
+          key={`home-${pageKey}`}
           onNavigate={handleNavigate} 
           recipes={recipes.length > 0 ? recipes : mockRecipes}
           user={user}
@@ -156,6 +164,7 @@ export default function App() {
       )}
       {currentPage === 'recipes' && (
         <RecipesPage 
+          key={`recipes-${pageKey}`}
           onNavigate={handleNavigate} 
           recipes={recipes.length > 0 ? recipes : mockRecipes}
           initialSpecies={selectedSpecies}

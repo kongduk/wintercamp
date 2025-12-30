@@ -50,10 +50,13 @@ export function RecipeDetailPage({ onNavigate, recipeId, user }) {
     if (!recipeId) return;
 
     try {
+      console.log(`[DetailPage] 좋아요 클릭 - recipeId: ${recipeId}`);
       const data = await toggleLike(recipeId);
+      console.log(`[DetailPage] toggleLike 결과 - recipeId: ${recipeId}, isLiked: ${data.isLiked}`);
       setIsLiked(data.isLiked);
       
       // Dispatch custom event to sync with RecipeCard
+      console.log(`[DetailPage] likeChanged 이벤트 발송 - recipeId: ${recipeId}, isLiked: ${data.isLiked}`);
       window.dispatchEvent(new CustomEvent('likeChanged', {
         detail: { recipeId, isLiked: data.isLiked }
       }));

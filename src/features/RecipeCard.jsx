@@ -4,7 +4,6 @@ import { toggleLike, checkLike } from '../shared/api/api-local.js';
 
 export function RecipeCard({ recipe, onClick }) {
   const [isLiked, setIsLiked] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   
   // Get image from either image or images array
   const imageUrl = recipe.image || (recipe.images && recipe.images[0]) || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800';
@@ -12,48 +11,56 @@ export function RecipeCard({ recipe, onClick }) {
   // Generate tags if not provided
   const tags = recipe.tags || [recipe.species, recipe.category].filter(Boolean);
   
-  // Check like status on mount and when refreshKey changes
+  // Check like status on mount
   useEffect(() => {
+    let isMounted = true;
+    console.log(`[RecipeCard] useEffect 실행 - recipe.id: ${recipe.id}, recipe.title: ${recipe.title}`);
+    
     const fetchLikeStatus = async () => {
       try {
+        console.log(`[RecipeCard] checkLike 호출 - recipe.id: ${recipe.id}`);
         const { isLiked: liked } = await checkLike(recipe.id);
-        setIsLiked(liked);
+        console.log(`[RecipeCard] checkLike 결과 - recipe.id: ${recipe.id}, isLiked: ${liked}`);
+        if (isMounted) {
+          setIsLiked(liked);
+          console.log(`[RecipeCard] setIsLiked 호출 - recipe.id: ${recipe.id}, liked: ${liked}`);
+        }
       } catch (error) {
         console.error('Failed to check like status:', error);
       }
     };
+    
     fetchLikeStatus();
-  }, [recipe.id, refreshKey]);
-  
-  // Listen for like changes from other components
-  useEffect(() => {
+    
+    // Listen for like changes from other components
     const handleLikeChange = (event) => {
-      if (event.detail.recipeId === recipe.id) {
+      console.log(`[RecipeCard] likeChanged 이벤트 수신 - event.detail:`, event.detail, `recipe.id: ${recipe.id}`);
+      if (event.detail.recipeId === recipe.id && isMounted) {
         setIsLiked(event.detail.isLiked);
+        console.log(`[RecipeCard] 이벤트로 setIsLiked 호출 - recipe.id: ${recipe.id}, isLiked: ${event.detail.isLiked}`);
       }
     };
     
-    // Refresh when navigating back to this page
-    const handlePageNavigate = () => {
-      setRefreshKey(prev => prev + 1);
-    };
-    
     window.addEventListener('likeChanged', handleLikeChange);
-    window.addEventListener('pageNavigate', handlePageNavigate);
+    console.log(`[RecipeCard] likeChanged 리스너 등록 - recipe.id: ${recipe.id}`);
     
     return () => {
+      isMounted = false;
       window.removeEventListener('likeChanged', handleLikeChange);
-      window.removeEventListener('pageNavigate', handlePageNavigate);
+      console.log(`[RecipeCard] cleanup - recipe.id: ${recipe.id}`);
     };
   }, [recipe.id]);
   
   const handleLikeClick = async (e) => {
     e.stopPropagation();
     try {
+      console.log(`[RecipeCard] 좋아요 클릭 - recipe.id: ${recipe.id}`);
       const { isLiked: liked } = await toggleLike(recipe.id);
+      console.log(`[RecipeCard] toggleLike 결과 - recipe.id: ${recipe.id}, isLiked: ${liked}`);
       setIsLiked(liked);
       
       // Dispatch custom event to sync with other components
+      console.log(`[RecipeCard] likeChanged 이벤트 발송 - recipe.id: ${recipe.id}, isLiked: ${liked}`);
       window.dispatchEvent(new CustomEvent('likeChanged', {
         detail: { recipeId: recipe.id, isLiked: liked }
       }));
@@ -78,7 +85,11 @@ export function RecipeCard({ recipe, onClick }) {
           className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center cursor-pointer"
         >
           <Heart 
-            className={`w-4 h-4 transition-colors ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} 
+            className="w-4 h-4 transition-colors"
+            style={{
+              fill: isLiked ? '#ef4444' : 'none',
+              color: isLiked ? '#ef4444' : '#374151'
+            }}
           />
         </div>
       </div>
