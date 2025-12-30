@@ -29,32 +29,83 @@ export function DetectPage({ onNavigate }) {
     setResult(null);
 
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const apiUrl = import.meta.env.VITE_API_URL;
       
-      // 임시 목업 데이터
-      const mockApiResponse = {
-        creature_name: '군소'
-      };
-      
-      const creatureName = mockApiResponse.creature_name;
-      const creature = getCreatureByName(creatureName);
-      
-      if (creature) {
-        setResult({
-          isHarmful: true,
-          species: creature.name,
-          confidence: 94.5,
-          description: creature.description,
+      if (apiUrl) {
+        // 이미지를 base64로 인코딩
+        const base64Image = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
         });
-        setSelectedSpecies(creature);
+        
+        // 백엔드 API 연결 (base64 JSON 전송)
+        const response = await fetch(`${apiUrl}/detect`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: base64Image,
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('API 요청 실패');
+        }
+        
+        const data = await response.json();
+        const creatureName = data.creature_name;
+        const creature = getCreatureByName(creatureName);
+        
+        if (creature) {
+          setResult({
+            isHarmful: true,
+            species: creature.name,
+            confidence: data.confidence || 94.5,
+            description: creature.description,
+          });
+          setSelectedSpecies(creature);
+        } else {
+          // 유해생물 목록에 없으면 유해생물이 아님
+          setResult({
+            isHarmful: false,
+            species: creatureName || '알 수 없는 생물',
+            confidence: data.confidence || 0,
+            description: '이 생물은 해양 유해생물이 아닙니다. 안심하세요!',
+          });
+          setSelectedSpecies(null);
+        }
       } else {
-        setResult({
-          isHarmful: false,
-          species: '알 수 없음',
-          confidence: 0,
-          description: '해당 생물을 데이터베이스에서 찾을 수 없습니다.',
-        });
+        // Mock API (백엔드 미연결 시)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const mockApiResponse = {
+          creature_name: '군소'
+        };
+        
+        const creatureName = mockApiResponse.creature_name;
+        const creature = getCreatureByName(creatureName);
+        
+        if (creature) {
+          setResult({
+            isHarmful: true,
+            species: creature.name,
+            confidence: 94.5,
+            description: creature.description,
+          });
+          setSelectedSpecies(creature);
+        } else {
+          // 유해생물 목록에 없으면 유해생물이 아님
+          setResult({
+            isHarmful: false,
+            species: '알 수 없는 생물',
+            confidence: 0,
+            description: '이 생물은 해양 유해생물이 아닙니다. 안심하세요!',
+          });
+          setSelectedSpecies(null);
+        }
       }
     } catch (error) {
       console.error('Detection error:', error);

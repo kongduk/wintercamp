@@ -1,12 +1,12 @@
-import { Search, Camera, Home, User, BookOpen, ChevronRight, Loader2 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { RecipeCard } from '../features/RecipeCard.jsx';
 import { SpeciesModal } from '../features/SpeciesModal.jsx';
 import { BottomNav } from '../widgets/BottomNav.jsx';
-import { Button } from '../shared/ui/button.jsx';
 import { getRandomCreatures } from '../entities/creatures.js';
+import { getRecipes } from '../shared/api/api-local.js';
 
-export function HomePage({ onNavigate, recipes, user }) {
+export function HomePage({ onNavigate }) {
   const [selectedSpecies, setSelectedSpecies] = useState(null);
   const [featuredSpecies, setFeaturedSpecies] = useState([]);
   const [topRecipes, setTopRecipes] = useState([]);
@@ -24,7 +24,6 @@ export function HomePage({ onNavigate, recipes, user }) {
     
     const loadTopRecipes = async () => {
       try {
-        const { getRecipes } = await import('../shared/api/api-local.js');
         const data = await getRecipes({ limit: 50 });
         // Sort by rating and get top 3
         const sorted = [...(data.recipes || [])].sort((a, b) => (b.rating || 0) - (a.rating || 0));

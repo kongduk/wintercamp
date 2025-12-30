@@ -135,8 +135,6 @@ export default function App() {
         <HomePage 
           key={`home-${pageKey}`}
           onNavigate={handleNavigate} 
-          recipes={recipes.length > 0 ? recipes : mockRecipes}
-          user={user}
         />
       )}
       {currentPage === 'detect' && <DetectPage onNavigate={handleNavigate} />}
